@@ -74,6 +74,16 @@ class CarSpawner{
             self.spawnTimer = nil
         }
     }
+   
+    public func clearCars(){
+        // Detach all cars from the parent scene
+        for car in cars {
+            car.entity.removeFromTarget()
+        }
+       
+        // Then clear all active cars
+        cars.removeAll()
+    }
     
     public func updateCars(){
         if cars.isEmpty {

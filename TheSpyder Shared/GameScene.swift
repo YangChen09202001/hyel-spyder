@@ -38,6 +38,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
    
     var swipeLeft: UISwipeGestureRecognizer!
     var swipeRight: UISwipeGestureRecognizer!
+    var tap: UITapGestureRecognizer!
     
     let hapticFeedback = UIImpactFeedbackGenerator(style: .light)
     
@@ -49,10 +50,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         globalScale = max(xScaleFactor, yScaleFactor)
    
         // Set up the scene and its components
-        self.physicsWorld.contactDelegate = self                // Make contact tests take place in this scene
-        self.physicsWorld.gravity = CGVector(dx: 0, dy: 0)      // Remove gravity
+        self.physicsWorld.contactDelegate = self // Make contact tests take place in this scene
+        self.physicsWorld.gravity = CGVector(dx: 0, dy: 0) // Remove gravity
            
-        // Set up swipe recognizers and add them to the scene
+        // Set up swipe and tap recognizers and add them to the scene
         swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:))) // The _: effectively makes it so the recognizer passes itself into HandleSwipe
         swipeLeft.direction = .left
        
@@ -63,6 +64,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
        
         view.addGestureRecognizer(swipeRight)
 
+        tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+
+        view.addGestureRecognizer(tap)
+        
         // Make all textures resize as nearest neighbor
         tBackground.filteringMode = .nearest
         tTitle.filteringMode = .nearest
@@ -189,7 +194,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
     }
-  
+ 
+    /// Set game state, making in-game elements respond accordingly
     func setGameState(to state: GameState){
         // Prevent looping transitions
         if state == gameState {
@@ -197,41 +203,44 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         gameState = state
+    
+        // MARK: The actions taken in each case have been shoddily put there after testing and seeing what fails, and assuming the only flow is title -> inGame -> gameOver -> title -> ...
+        // TODO: Ensure transition actions are robust!
         
         switch state {
         case .title:
             gameOverCard.isHidden = true
             titleCard.isHidden = false
-            
-            // No cars spawning
+
+            player.recenter()
+            player.isFrozen = false
+
             CarSpawner.shared.stop()
-            
-            // Reset speedkeeper
-            // SpeedKeeper.shared.stop()
-            
-            // Reset score and hide label
+            CarSpawner.shared.clearCars()
+
+            ScoreKeeper.shared.reset()
             ScoreKeeper.shared.label.isHidden = true
+
+            SpeedKeeper.shared.reset()
+            SpeedKeeper.shared.isFrozen = false
         case .inGame:
             gameOverCard.isHidden = true
             titleCard.isHidden = true
-           
-            // Begin spawning cars
+
             CarSpawner.shared.start()
-
-            // Begin keeping score
+            
             ScoreKeeper.shared.start()
-
-            // Unhide score label
             ScoreKeeper.shared.label.isHidden = false
         case.gameOver:
             gameOverCard.isHidden = false
             titleCard.isHidden = true
+       
+            player.isFrozen = true
+            
+            SpeedKeeper.shared.isFrozen = true
+
             ScoreKeeper.shared.label.isHidden = true
             
-            // Freeze game speed
-            SpeedKeeper.shared.freeze()
-            
-            // Stop spawning cars
             CarSpawner.shared.stop()
         }
     }
@@ -239,16 +248,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     @objc func handleSwipe(_ gesture: UISwipeGestureRecognizer){
         // Play haptic feedback
         hapticFeedback.impactOccurred()
-       
+      
+        // No actions save for a tap to reset should be taken in game over
+        if gameState == .gameOver {
+            return
+        }
+        
         // If is in title screen, begin game!
         if gameState == .title {
             setGameState(to: .inGame)
         }
-        
+       
         // Change player direction
         player.changeDirection(to: gesture.direction)
     }
-   
+  
+    @objc func handleTap(_ tap: UITapGestureRecognizer){
+        if gameState == .gameOver {
+            setGameState(to: .title)
+        }
+    }
+    
     func scrollBackground(){
         let dy = SpeedKeeper.shared.speed * deltaTime
                 
@@ -277,12 +297,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // MARK: Functionality assignment is borked; need to cleanly establish what triggers what, and so on... But it works for now!
         
         scrollBackground()
+        player.update(with: deltaTime)
         CarSpawner.shared.updateCars()
-        
-        if gameState == .inGame {
-            player.update(with: deltaTime)
-            SpeedKeeper.shared.update()
-        }
+        SpeedKeeper.shared.update()
                 
         lastUpdateTime = currentTime
     }

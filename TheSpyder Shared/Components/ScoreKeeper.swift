@@ -15,8 +15,9 @@ class ScoreKeeper{
     
     var label: SKLabelNode
  
-    // Private initializers prevent external instantiation! Useful for singletons
     private init(){
+        // MARK: Private initializers prevent external instantiation; useful for singletons!
+
         // Setup score label
         self.label = SKLabelNode(text: "\(self.score)")
 
@@ -24,7 +25,8 @@ class ScoreKeeper{
         self.label.fontSize = 32
         self.label.zPosition = CGFloat(GameObjectType.gui.rawValue)
     }
-    
+   
+    /// Adds the score label to the target scene
     public func addLabelToScene(_ target: SKScene){
         // Add to target scene
         target.addChild(label)
@@ -32,7 +34,8 @@ class ScoreKeeper{
         // Position label using scene dimensions
         self.label.position = CGPoint(x: target.frame.midX, y: target.frame.midY + target.frame.midY / 2)
     }
-   
+  
+    /// Add current score award times multiplier and update score label to reflect it
     @objc func addScore(){
         score += Int(CGFloat(baseAward) * multiplier)
         label.text = "\(score)"
@@ -55,5 +58,18 @@ class ScoreKeeper{
             self.awardTimer?.invalidate()
             self.awardTimer = nil
         }
+    }
+   
+    /// Reset state
+    public func reset(){
+        // Stop timer
+        self.stop()
+       
+        // Reset score and multiplier
+        score = 0
+        multiplier = 1
+
+        // Set the score label accordingly
+        label.text = "\(score)"
     }
 }

@@ -8,6 +8,8 @@ class Player{
     var targetPos: CGPoint
     var targetRot: CGFloat
     var smoothTime: CGFloat
+   
+    var isFrozen = false
     
     init(scale: CGFloat, texture: SKTexture, shadow: SKTexture?, target: SKScene, startPos: CGPoint = CGPoint(x: 0, y: 0)){
         // Set up entity
@@ -60,7 +62,27 @@ class Player{
             return
         }
     }
-  
+
+    /// Resets the player to the centermost lane
+    public func recenter(){
+        if lanes.isEmpty {
+            return
+        }
+   
+        // Set current lane to centermost
+        lane = lanes.count / 2 as Int
+       
+        // Set the target pos to that lane, and clear rotation
+        targetPos.x = lanes[lane].x
+        targetPos.y = lanes[lane].y
+        targetRot = 0
+      
+        // Sync with transform values for instant reset
+        entity.node.position.x = targetPos.x
+        entity.node.position.y = targetPos.y
+        entity.node.zRotation = 0
+    }
+    
     /// Move the player node using interpolation instead of its physics body
     private func lerpMove(with deltaTime: CGFloat){
         if lanes.isEmpty {
@@ -79,7 +101,10 @@ class Player{
     }
 
     public func update(with deltaTime: CGFloat){
-        lerpMove(with: deltaTime) // Must update player position before shadow's position is updated!
+        if !isFrozen {
+            lerpMove(with: deltaTime) // Must update player position before shadow's position is updated!
+        }
+        
         entity.update()
     }
 }

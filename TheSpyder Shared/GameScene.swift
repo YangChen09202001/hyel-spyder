@@ -148,12 +148,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             scale: globalScale,
             texture: tSpider,
             shadow: nil,
-            target: self,
-            startPos: CGPoint(
-                x: frame.midX,
-                y: -tSpider.size().height * globalScale
-            )
+            target: self
         )
+        
+        spider.possibleAttackTargets = player.lanes
         
         // Setup score keeper
         ScoreKeeper.shared.addLabelToScene(self)
@@ -173,24 +171,45 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func didBegin(_ contact: SKPhysicsContact) {
-        // Flag collision if the player collides with a car
+        // Flag collision if the player collides with a car or the spider
         var body1: SKPhysicsBody
         var body2: SKPhysicsBody
 
-        for car in CarSpawner.shared.cars {
-            if contact.bodyA.categoryBitMask > contact.bodyB.categoryBitMask {
-                body1 = contact.bodyA
-                body2 = contact.bodyB
-            } else {
-                body1 = contact.bodyB
-                body2 = contact.bodyA
-            }
-           
-            let playerIsBody1 = body1.categoryBitMask & player.entity.node.physicsBody!.categoryBitMask != 0
-            let carIsBody2 = body2.categoryBitMask & car.entity.node.physicsBody!.categoryBitMask != 0
-            
-            if (playerIsBody1 && carIsBody2){
-                setGameState(to: .gameOver)
+        if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
+            body1 = contact.bodyA
+            body2 = contact.bodyB
+        }
+        
+        else {
+            body1 = contact.bodyB
+            body2 = contact.bodyA
+        }
+
+        let playerIsBody1 = (body1.categoryBitMask & player.entity.node.physicsBody!.categoryBitMask) != 0
+        let spiderIsBody2 = (body2.categoryBitMask & spider.entity.node.physicsBody!.categoryBitMask) != 0
+        
+        // Check collision with spider first
+        if playerIsBody1 && spiderIsBody2 {
+            setGameState(to: .gameOver)
+        }
+
+        // If not, check collision with cars
+        else {
+            for car in CarSpawner.shared.cars {
+                if contact.bodyA.categoryBitMask > contact.bodyB.categoryBitMask {
+                    body1 = contact.bodyA
+                    body2 = contact.bodyB
+                } else {
+                    body1 = contact.bodyB
+                    body2 = contact.bodyA
+                }
+             
+                let playerIsBody1 = body1.categoryBitMask & player.entity.node.physicsBody!.categoryBitMask != 0
+                let carIsBody2 = body2.categoryBitMask & car.entity.node.physicsBody!.categoryBitMask != 0
+                
+                if playerIsBody1 && carIsBody2 {
+                    setGameState(to: .gameOver)
+                }
             }
         }
     }
@@ -213,7 +232,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             titleCard.isHidden = false
 
             player.recenter()
-            player.isFrozen = false
+            player.isFrozen = false // TODO: Make player use similar freezing protocol to spider
+
+            spider.stop()
+            spider.moveOffscreen()
+            spider.setFrozen(to: false)
 
             CarSpawner.shared.stop()
             CarSpawner.shared.clearCars()
@@ -227,6 +250,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             gameOverCard.isHidden = true
             titleCard.isHidden = true
 
+            spider.start()
+            
             CarSpawner.shared.start()
             
             ScoreKeeper.shared.start()
@@ -236,6 +261,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             titleCard.isHidden = true
        
             player.isFrozen = true
+            spider.setFrozen(to: true)
             
             SpeedKeeper.shared.isFrozen = true
 
@@ -298,6 +324,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         scrollBackground()
         player.update(with: deltaTime)
+        spider.update(with: deltaTime)
         CarSpawner.shared.updateCars()
         SpeedKeeper.shared.update()
                 

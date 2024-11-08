@@ -5,9 +5,9 @@ class Player{
     var lanes = Array<CGPoint>()
     var lane: Int = 0
 
+    let smoothTime: CGFloat
     var targetPos: CGPoint
     var targetRot: CGFloat
-    var smoothTime: CGFloat
    
     var isFrozen = false
     

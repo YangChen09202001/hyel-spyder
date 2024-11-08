@@ -1,12 +1,6 @@
 import SpriteKit
 import GameplayKit
 
-// Layers:
-// -1 -> BG
-//  0 -> Shadows
-//  1 -> Cars
-//  2 -> Player
-//  3 -> GUI
 enum GameObjectType: UInt32 {
     case background = 0
     case shadow = 1
@@ -58,12 +52,8 @@ class Entity{
         node.physicsBody?.categoryBitMask = type.rawValue
     
         switch type {
-        case .car:
-            node.physicsBody?.contactTestBitMask = 0x1 << 0
         case .player:
-            node.physicsBody?.contactTestBitMask = 0x1 << 1
-        case .spider:
-            node.physicsBody?.contactTestBitMask = 0x1 << 2
+            node.physicsBody?.contactTestBitMask = GameObjectType.car.rawValue | GameObjectType.spider.rawValue
         default:
             node.physicsBody?.contactTestBitMask = 0
         }

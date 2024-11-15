@@ -26,11 +26,11 @@
 				font.ttf,
 				GameScene.sks,
 				GameScene.swift,
-				Sounds/attack.wav,
-				Sounds/crash.wav,
-				Sounds/hide.wav,
-				Sounds/peek.wav,
-				Sounds/switch.wav,
+				Manager/AudioManager.swift,
+				Sounds/attack.mp3,
+				Sounds/crash.mp3,
+				Sounds/hide.mp3,
+				Sounds/peek.mp3,
 			);
 			target = 053C70622CCE68FE0093D173 /* TheSpyder iOS */;
 		};

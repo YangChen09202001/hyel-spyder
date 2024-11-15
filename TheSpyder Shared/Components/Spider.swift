@@ -39,6 +39,7 @@ class Spider{
         let moveToPeek = SKAction.run {
             self.targetPos.x = attackTarget.x
             self.targetPos.y = 0
+            AudioManager.shared.playSound("peek")
         }
         
         // Stay peeked for a bit
@@ -57,6 +58,7 @@ class Spider{
         let moveBackDown = SKAction.run {
             self.targetPos.x = self.entity.node.parent == nil ? 0 : self.entity.node.parent!.frame.midX
             self.targetPos.y = -self.entity.node.frame.height
+            AudioManager.shared.playSound("hide")
         }
    
         // Start the timer again

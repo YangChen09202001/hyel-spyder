@@ -43,6 +43,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let hapticFeedback = UIImpactFeedbackGenerator(style: .light)
     
     override func didMove(to view: SKView) {
+        // Load sound effects
+        AudioManager.shared.loadAudio(filename: "switch", fileExtension: "mp3")
+        AudioManager.shared.loadAudio(filename: "peek", fileExtension: "mp3")
+        AudioManager.shared.loadAudio(filename: "hide", fileExtension: "mp3")
+        AudioManager.shared.loadAudio(filename: "attack", fileExtension: "mp3")
+        AudioManager.shared.loadAudio(filename: "crash", fileExtension: "mp3")
         // The global scale is based on how much we need to scale the background by to cover the whole scene's frame
         let xScaleFactor = view.frame.width / tBackground.size().width
         let yScaleFactor = view.frame.height / tBackground.size().height
@@ -191,6 +197,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Check collision with spider first
         if playerIsBody1 && spiderIsBody2 {
             setGameState(to: .gameOver)
+            AudioManager.shared.playSound("crash")
         }
 
         // If not, check collision with cars
@@ -209,6 +216,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 
                 if playerIsBody1 && carIsBody2 {
                     setGameState(to: .gameOver)
+                    AudioManager.shared.playSound("crash")
                 }
             }
         }
@@ -274,7 +282,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     @objc func handleSwipe(_ gesture: UISwipeGestureRecognizer){
         // Play haptic feedback
         hapticFeedback.impactOccurred()
-      
+        AudioManager.shared.playSound("peek") // Example: Play "peek" sound on right swipe
         // No actions save for a tap to reset should be taken in game over
         if gameState == .gameOver {
             return
